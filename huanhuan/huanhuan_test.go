@@ -19,7 +19,7 @@ import (
 var (
 	// 模型配置
 	ModelType   = "qwen-plus"
-	OwnerAPIKey = "sk-66f147f2c8ba4bd9ae3909c106d78ac7" // ⚠️ 生产环境请换为环境变量
+	OwnerAPIKey = "" // ⚠️ 生产环境请换为环境变量
 	BaseURL     = "https://dashscope.aliyuncs.com/compatible-mode/v1/"
 
 	// 系统提示词：深度定制欢欢老师的背景
