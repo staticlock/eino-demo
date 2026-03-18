@@ -1,0 +1,57 @@
+# 二进制文件 (Binaries)
+# -----------------------------------------------------------------------------
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# 常见的输出目录
+bin/
+out/
+dist/
+
+# 如果你习惯直接在根目录运行 go build 产生与文件夹同名的二进制文件，
+# 建议手动添加具体的文件名，或者统一输出到 bin/ 目录。
+
+# 依赖管理 (Dependencies)
+# -----------------------------------------------------------------------------
+# 现代 Go 项目 (Go Modules) 通常不需要忽略 vendor/ 目录，
+# 但如果你不希望将依赖代码提交到仓库，可以取消下面的注释。
+# vendor/
+
+# 运行环境与配置 (Environment / Configurations)
+# -----------------------------------------------------------------------------
+.env
+*.env.local
+*.env.development.local
+*.env.test.local
+*.env.production.local
+
+# 测试与覆盖率 (Test and Coverage)
+# -----------------------------------------------------------------------------
+*.test
+*.out
+coverage.txt
+
+# 操作系统与编辑器 (OS / IDEs)
+# -----------------------------------------------------------------------------
+# macOS
+.DS_Store
+
+# JetBrains (GoLand / IntelliJ)
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# 日志文件 (Logs)
+# -----------------------------------------------------------------------------
+*.log
