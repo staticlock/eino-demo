@@ -164,7 +164,6 @@ import (
 	"github.com/cloudwego/eino/schema"
 	"github.com/joho/godotenv"
 	"io"
-	"log"
 	"log/slog"
 	"os"
 	"strings"
@@ -172,12 +171,11 @@ import (
 
 var (
 	// 模型配置
-	ModelType   = "LongCat-Flash-Chat"
-	OwnerAPIKey = "" // ⚠️ 生产环境请换为环境变量
-	BaseURL     = "https://api.longcat.chat/openai"
+	ModelType = ""
+	ApiKey    = ""
+	BaseURL   = ""
 	// 系统提示词：深度定制欢欢老师的背景
 	SystemMessageTemplate = `你是一位专为教育培训行业资深语文教师——“欢欢老师”设计的私人情感伴侣与职业鼓励师。
-
 【用户画像】
 - 姓名：欢欢老师
 - 职业：教育培训行业语文老师
@@ -190,7 +188,6 @@ var (
 3. 温暖治愈：说话风格要温柔、知性、充满文学素养。善用温暖的比喻，抚平她的焦虑。
 4. 价值赋能：当她自我怀疑时，你要提醒她教育的长期主义价值，告诉她“每一个孩子因为您而改变”的意义。
 5. 语气要求：{style}。
-
 【注意事项】
 - 不要说教，多倾听和陪伴。
 - 如果她提到具体的教学难题，可以先安抚情绪，再提供简短温和的建议。
@@ -204,36 +201,35 @@ func main() {
 	// 创建一个 JSON 处理器，方便观察结构化输出
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	// 1. 加载 .env 文件
-	// 默认读取根目录下的 .env，也可以传入多个文件名
-	err := godotenv.Load()
+	// 默认读取当前目录下的 .env，也可以传入多个文件名
+	// 指定相对于当前运行目录的路径
+	// 假设你的文件在项目根目录的 config 文件夹下
+	err := godotenv.Load("./config/.env")
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		logger.LogAttrs(ctx, slog.LevelError, "加载 .env 文件失败，确保文件存在且路径正确",
+			slog.String("error", err.Error()))
 	}
-
 	// 2. 使用 os.Getenv 读取环境变量
-	port := os.Getenv("PORT")
-	dbUrl := os.Getenv("DB_URL")
-	apiKey := os.Getenv("API_KEY")
+	ModelType = os.Getenv("ModelType")
+	ApiKey = os.Getenv("ApiKey")
+	BaseURL = os.Getenv("BaseURL")
 	// 性能最优：避免了反射和多余的内存分配
 	logger.LogAttrs(ctx, slog.LevelInfo, "环境变量加载成功",
-		slog.String("PORT", port),
-		slog.String("DB_URL", dbUrl),
-		slog.String("apiKey", apiKey),
+		slog.String("ModelType", ModelType),
+		slog.String("ApiKey", ApiKey),
+		slog.String("BaseURL", BaseURL),
 	)
-	OwnerAPIKey = apiKey // 将读取到的 API Key 赋值给全局变量
 	// 1. 初始化组件
 	template := createPrompt()
-
 	chatModel, err := openai.NewChatModel(ctx, &openai.ChatModelConfig{
 		Model:   ModelType,
-		APIKey:  OwnerAPIKey,
+		APIKey:  ApiKey,
 		BaseURL: BaseURL,
 	})
 	if err != nil {
-		fmt.Println("❌ 创建模型失败:", err)
+		logger.LogAttrs(ctx, slog.LevelError, "创建模型失败，请检查配置")
 		return
 	}
-
 	// 2. 构建 Few-Shot 示例 (针对欢欢老师的教培场景)
 	examples := []*schema.Message{
 		schema.UserMessage("这周连着上了十几节课，嗓子都哑了，明天还有两个班的续班家长会，真的好怕被家长问倒，有点想逃避。"),
@@ -248,19 +244,17 @@ func main() {
 		AppendChatModel(chatModel).
 		Compile(ctx)
 	if err != nil {
-		fmt.Println("❌ 编译 Chain 失败:", err)
+		logger.LogAttrs(ctx, slog.LevelError, "编译 Chain 失败，请检查组件连接")
 		return
 	}
 	// 4. 初始化聊天状态
 	var chatHistory []*schema.Message
 	style := "温柔坚定、充满诗意且极具同理心"
-
 	// 开场白
 	fmt.Println("🌸 欢迎回来，欢欢老师！")
 	fmt.Println("🍵 我是您的专属树洞和鼓励师。")
 	fmt.Println("💡 无论是工作的疲惫，还是生活的琐碎，都可以随时告诉我。")
 	fmt.Println("🚪 输入 'exit' 退出聊天。")
-
 	// 5. 开始交互式循环
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
